@@ -5,16 +5,16 @@
 # compiles all C files located in the source directory and all subdirectories.
 
 # Executable Name
-PROJECT := default
+PROJECT := symtab-test
 
 # Compiler
 CC := gcc
 
 # Compiler flags
-CFLAGS := -Wall -Wextra
+CFLAGS := -Wall -Wextra -fprofile-arcs -ftest-coverage -g
 
 # Linker flags
-LDFLAGS :=
+LDFLAGS := -fprofile-arcs -ftest-coverage
 
 # Directory where source files are located
 SRCDIR := src
@@ -57,3 +57,6 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 
 clean:
 	rm $(OBJDIR)/* $(TARGET) -rf
+
+coverage:
+	gcovr -v -r .

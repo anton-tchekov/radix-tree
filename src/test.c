@@ -253,18 +253,33 @@ static void test_cmdline(void)
 		fgets(buf, sizeof(buf), stdin);
 
 		p = strtok(buf, delim);
+		if(p == NULL)
+		{
+			continue;
+		}
+
 		if(!strcmp(p, "quit"))
 		{
 			running = 0;
 		}
+		else if(!strcmp(p, "help"))
+		{
+			printf(
+				"Command\n"
+				"quit             | Quit\n"
+				"print            | Print all entries\n"
+				"get `ident`      | Get value for identifier\n"
+				"put `ident` int  | Insert identifier with value\n"
+				"remove `ident`   | Remove identifier (pls dont use it will crash\n");
+		}
 		else if(!strcmp(p, "print"))
 		{
-			p = strtok(NULL, delim);
 			symtab_print(tab);
 		}
 		else if(!strcmp(p, "get"))
 		{
 			p = strtok(NULL, delim);
+			if(p == NULL) { printf("Invalid identifier\n"); continue; }
 			int v = symtab_get(tab, p);
 			if(v == 0)
 			{
@@ -278,12 +293,16 @@ static void test_cmdline(void)
 		else if(!strcmp(p, "remove"))
 		{
 			p = strtok(NULL, delim);
+			if(p == NULL) { printf("Invalid identifier\n"); continue; }
 			symtab_remove(tab, p);
 		}
 		else if(!strcmp(p, "put"))
 		{
 			p = strtok(NULL, delim);
-			int val = atoi(strtok(NULL, delim));
+			if(p == NULL) { printf("Invalid identifier\n"); continue; }
+			char *q = strtok(NULL, delim);
+			if(q == NULL) { printf("Invalid value\n"); continue; }
+			int val = atoi(q);
 			if(val == 0)
 			{
 				printf("Invalid value\n");
@@ -291,6 +310,7 @@ static void test_cmdline(void)
 			else
 			{
 				symtab_put(tab, p, val);
+				printf("%s = %d\n", p, val);
 			}
 		}
 		else

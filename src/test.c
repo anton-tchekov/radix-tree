@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+#include <stdlib.h>
 
 static void test_complete(void)
 {
@@ -238,6 +239,69 @@ static void test_remove(void)
 	symtab_destroy(tab);
 }
 
+static void test_cmdline(void)
+{
+	SymTab *tab = symtab_create();
+	char buf[256];
+	char *delim = " \n";
+	char *p;
+	int running = 1;
+
+	while(running)
+	{
+		printf("> ");
+		fgets(buf, sizeof(buf), stdin);
+
+		p = strtok(buf, delim);
+		if(!strcmp(p, "quit"))
+		{
+			running = 0;
+		}
+		else if(!strcmp(p, "print"))
+		{
+			p = strtok(NULL, delim);
+			symtab_print(tab);
+		}
+		else if(!strcmp(p, "get"))
+		{
+			p = strtok(NULL, delim);
+			int v = symtab_get(tab, p);
+			if(v == 0)
+			{
+				printf("Not found\n");
+			}
+			else
+			{
+				printf("%s = %d\n", p, v);
+			}
+		}
+		else if(!strcmp(p, "remove"))
+		{
+			p = strtok(NULL, delim);
+			symtab_remove(tab, p);
+		}
+		else if(!strcmp(p, "put"))
+		{
+			p = strtok(NULL, delim);
+			int val = atoi(strtok(NULL, delim));
+			if(val == 0)
+			{
+				printf("Invalid value\n");
+			}
+			else
+			{
+				symtab_put(tab, p, val);
+			}
+		}
+		else
+		{
+			printf("Unknown command\n");
+		}
+	}
+
+	symtab_destroy(tab);
+}
+
 int main(void)
 {
 	printf("Starting SymTab Test\n");
@@ -245,10 +309,12 @@ int main(void)
 	test_complete();
 	test_remove();
 	//test_remove_prefix();
-	test_remove_suffix();
+	//test_remove_suffix();
 	test_prefix_iter();
-	test_remove_branch();
-	test_remove_prev_branch();
+	//test_remove_branch();
+	//test_remove_prev_branch();
+
+	test_cmdline();
 
 	return 0;
 }

@@ -1,2 +1,3 @@
-# radix-tree
-Implementation of a radix tree in C
+# symbol-table
+
+Implementation of a symbol table as a radix tree in C

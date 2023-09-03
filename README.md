@@ -21,6 +21,12 @@ There is room for improvement, for example storing the string in the node itself
 as a flexible array member will save at least 4 bytes (+ allocator overhead) and
 improve performance due to fewer dynamic memory allocations.
 
+I am somewhat questioning this project since in practice, I am going to use this
+for around 1000 entries only, and it doing it as a linear list with a fixed
+size for every entry (4 bytes value + 28 bytes identifier for example) is a lot
+less complex, easier to work with and the performance difference will probably be
+negligible.
+
 ## Command line usage
 
 Type `help` for command list.

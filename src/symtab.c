@@ -7,6 +7,9 @@
  */
 
 #include "symtab.h"
+
+#if SYMTAB_IMPLEMENTATION == SYMTAB_IMPL_TREE
+
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -188,12 +191,13 @@ static void _symtab_destroy(SymTab *tab)
 }
 
 /* --- PUBLIC --- */
-SymTab *symtab_create(void)
+SymTab *symtab_create(int capacity)
 {
 	SymEntry *tab = _new_entry();
 	tab->Piece = "";
 	tab->Value = 0;
 	return tab;
+	(void)capacity;
 }
 
 void symtab_destroy(SymTab *tab)
@@ -389,7 +393,7 @@ int symtab_complete(const SymTab *entry, char *ident)
 }
 
 int symtab_prefix_iter(const SymTab *entry, char *ident, int max_results,
-	void (*callback)(char *ident))
+	void *data, void (*callback)(void *data, char *ident))
 {
 	int num_results = 0;
 
@@ -435,4 +439,6 @@ void symtab_print(const SymTab *tab)
 	_symtab_print(tab->Children, 0);
 }
 
-#endif
+#endif /* SYMTAB_DEBUG */
+
+#endif /* SYMTAB_IMPLEMENTATION == SYMTAB_IMPL_TREE */

@@ -4,6 +4,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define CAPACITY 1024
+
 static void test_complete(void)
 {
 	int rv;
@@ -12,7 +14,7 @@ static void test_complete(void)
 
 	printf("\ntest_complete\n");
 
-	tab = symtab_create();
+	tab = symtab_create(CAPACITY);
 
 	symtab_put(tab, "main", 1);
 	symtab_put(tab, "test_put", 2);
@@ -45,14 +47,22 @@ static void test_complete(void)
 	symtab_destroy(tab);
 }
 
+static void iter_callback(void *data, char *ident)
+{
+	int *n = data;
+	printf("%d: %s\n", *n, ident);
+	++(*n);
+}
+
 static void test_prefix_iter(void)
 {
+	int cnt = 0;
 	char buf[256] = "sy";
 	SymTab *tab;
 
 	printf("\ntest_prefix_iter\n");
 
-	tab = symtab_create();
+	tab = symtab_create(CAPACITY);
 
 	symtab_put(tab, "main", 1);
 	symtab_put(tab, "test_put", 2);
@@ -62,7 +72,8 @@ static void test_prefix_iter(void)
 	symtab_put(tab, "symtab_get", 6);
 	symtab_put(tab, "test_exists", 7);
 
-	symtab_prefix_iter(tab, buf, 3, NULL);
+	symtab_prefix_iter(tab, buf, 3, &cnt, iter_callback);
+	assert(cnt == 3);
 
 	symtab_destroy(tab);
 }
@@ -73,7 +84,7 @@ static void test_put_get(void)
 
 	printf("\ntest_put_get\n");
 
-	tab = symtab_create();
+	tab = symtab_create(CAPACITY);
 
 	symtab_put(tab, "hello", 7);
 	symtab_put(tab, "world", 2);
@@ -118,7 +129,7 @@ static void test_remove_prefix(void)
 
 	printf("\ntest_remove_prefix\n");
 
-	tab = symtab_create();
+	tab = symtab_create(CAPACITY);
 
 	symtab_put(tab, "testing", 99);
 	symtab_put(tab, "test", 33);
@@ -138,7 +149,7 @@ static void test_remove_suffix(void)
 
 	printf("\ntest_remove_suffix\n");
 
-	tab = symtab_create();
+	tab = symtab_create(CAPACITY);
 
 	symtab_put(tab, "testing", 99);
 	symtab_put(tab, "test", 33);
@@ -159,7 +170,7 @@ static void test_remove_branch(void)
 
 	printf("\ntest_remove_branch\n");
 
-	tab = symtab_create();
+	tab = symtab_create(CAPACITY);
 
 	symtab_put(tab, "team", 22);
 	symtab_put(tab, "test", 55);
@@ -180,7 +191,7 @@ static void test_remove_prev_branch(void)
 
 	printf("\ntest_remove_prev_branch\n");
 
-	tab = symtab_create();
+	tab = symtab_create(CAPACITY);
 
 	symtab_put(tab, "team", 22);
 	symtab_put(tab, "test", 55);
@@ -198,14 +209,13 @@ static void test_remove_prev_branch(void)
 	symtab_destroy(tab);
 }
 
-
 static void test_remove(void)
 {
 	SymTab *tab;
 
 	printf("\ntest_remove\n");
 
-	tab = symtab_create();
+	tab = symtab_create(CAPACITY);
 
 	/* Test remove when empty */
 	assert(symtab_remove(tab, "bla") == 0);
@@ -241,7 +251,7 @@ static void test_remove(void)
 
 static void test_cmdline(void)
 {
-	SymTab *tab = symtab_create();
+	SymTab *tab = symtab_create(CAPACITY);
 	char buf[256];
 	char *delim = " \n";
 	char *p;
@@ -270,7 +280,7 @@ static void test_cmdline(void)
 				"print            | Print all entries\n"
 				"get `ident`      | Get value for identifier\n"
 				"put `ident` int  | Insert identifier with value\n"
-				"remove `ident`   | Remove identifier (pls dont use it will crash\n");
+				"remove `ident`   | Remove identifier\n");
 		}
 		else if(!strcmp(p, "print"))
 		{
@@ -326,14 +336,13 @@ int main(void)
 {
 	printf("Starting SymTab Test\n");
 	test_put_get();
-	test_complete();
+	//test_complete();
 	test_remove();
-	//test_remove_prefix();
-	//test_remove_suffix();
+	test_remove_prefix();
+	test_remove_suffix();
 	test_prefix_iter();
-	//test_remove_branch();
-	//test_remove_prev_branch();
-
+	test_remove_branch();
+	test_remove_prev_branch();
 	test_cmdline();
 
 	return 0;

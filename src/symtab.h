@@ -14,6 +14,11 @@
 
 #define SYMTAB_DEBUG
 
+#define SYMTAB_IMPL_TREE  1
+#define SYMTAB_IMPL_ARRAY 2
+
+#define SYMTAB_IMPLEMENTATION SYMTAB_IMPL_ARRAY
+
 /* Symbol table interface */
 typedef struct SYMTAB SymTab;
 
@@ -22,7 +27,7 @@ typedef struct SYMTAB SymTab;
  *
  * @return Pointer to symbol table allocated on the heap
  */
-SymTab *symtab_create(void);
+SymTab *symtab_create(int capacity);
 
 /**
  * @brief Frees all the memory of a symbol table
@@ -82,12 +87,13 @@ int symtab_complete(const SymTab *tab, char *ident);
  *              `ident` should point to a buffer that is large enough to hold
  *              the longest entry in the table
  * @param max_results Maximum number of results (0 for unlimited)
+ * @param data Pointer to custom data that is passed to the callback
  * @param callback Callback function that is called with the completed
  *                 identifier
  * @return The number of times the callback was called
  */
 int symtab_prefix_iter(const SymTab *tab, char *ident, int max_results,
-	void (*callback)(char *ident));
+	void *data, void (*callback)(void *data, char *ident));
 
 #ifdef SYMTAB_DEBUG
 

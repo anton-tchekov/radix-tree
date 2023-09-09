@@ -23,7 +23,7 @@ typedef struct SYMTAB
 } SymEntry;
 
 /* --- PRIVATE --- */
-static SymEntry *_new_entry(void)
+static SymEntry *_entry_new(void)
 {
 	SymEntry *n = malloc(sizeof(SymEntry));
 	n->Next = NULL;
@@ -31,7 +31,7 @@ static SymEntry *_new_entry(void)
 	return n;
 }
 
-static void _free_entry(SymEntry *entry)
+static void _entry_free(SymEntry *entry)
 {
 	free(entry->Piece);
 	free(entry);
@@ -48,11 +48,6 @@ static char *_strdup(const char *s)
 static inline int _is_leaf(const SymEntry *entry)
 {
 	return entry->Value;
-}
-
-static inline int _is_no_leaf(const SymEntry *entry)
-{
-	return !_is_leaf(entry);
 }
 
 static inline int _get_value(const SymEntry *entry)
@@ -75,11 +70,6 @@ static inline int _has_children(const SymEntry *entry)
 	return entry->Children != NULL;
 }
 
-static inline int _has_no_children(const SymEntry *entry)
-{
-	return !_has_children(entry);
-}
-
 static inline int _has_exactly_one_child(const SymEntry *entry)
 {
 	return _has_children(entry) && _is_last(entry->Children);
@@ -87,7 +77,7 @@ static inline int _has_exactly_one_child(const SymEntry *entry)
 
 static void _new_single_leaf(SymEntry *parent, const char *label, int value)
 {
-	SymEntry *n = _new_entry();
+	SymEntry *n = _entry_new();
 	n->Piece = _strdup(label);
 	_set_leaf_value(n, value);
 	parent->Children = n;
@@ -95,7 +85,7 @@ static void _new_single_leaf(SymEntry *parent, const char *label, int value)
 
 static void _new_last_leaf(SymEntry *prev, const char *label, int value)
 {
-	SymEntry *n = _new_entry();
+	SymEntry *n = _entry_new();
 	n->Piece = _strdup(label);
 	_set_leaf_value(n, value);
 	prev->Next = n;
@@ -103,7 +93,7 @@ static void _new_last_leaf(SymEntry *prev, const char *label, int value)
 
 static SymEntry *_entry_split(SymEntry *entry, char *pos)
 {
-	SymEntry *second = _new_entry();
+	SymEntry *second = _entry_new();
 	second->Value = entry->Value;
 	second->Piece = _strdup(pos);
 	second->Children = entry->Children;
@@ -120,7 +110,7 @@ static void _entry_split_for_child(
 
 	second = _entry_split(entry, pos);
 	entry->Value = 0;
-	n = _new_entry();
+	n = _entry_new();
 	n->Piece = _strdup(label);
 	_set_leaf_value(n, value);
 	second->Next = n;
@@ -132,7 +122,7 @@ static void _entry_split_for_prefix(SymEntry *entry, char *pos, int value)
 	_set_leaf_value(entry, value);
 }
 
-static void _merge_entry(SymEntry *parent, SymEntry *child)
+static void _entry_merge(SymEntry *parent, SymEntry *child)
 {
 	size_t parent_len = strlen(parent->Piece);
 	size_t child_len = strlen(child->Piece);
@@ -140,14 +130,18 @@ static void _merge_entry(SymEntry *parent, SymEntry *child)
 	parent->Children = child->Children;
 	parent->Piece = realloc(parent->Piece, parent_len + child_len + 1);
 	strcpy(parent->Piece + parent_len, child->Piece);
-	_free_entry(child);
+	_entry_free(child);
 }
 
-static void _remove_entry(SymEntry *entry, SymEntry *parent, SymEntry *prev)
+static void _entry_remove(SymEntry *entry, SymEntry *parent, SymEntry *prev)
 {
 	if(_has_children(entry))
 	{
 		entry->Value = 0;
+		if(_is_last(entry->Children))
+		{
+			_entry_merge(entry, entry->Children);
+		}
 	}
 	else
 	{
@@ -160,16 +154,16 @@ static void _remove_entry(SymEntry *entry, SymEntry *parent, SymEntry *prev)
 			parent->Children = entry->Next;
 		}
 
-		_free_entry(entry);
+		_entry_free(entry);
 	}
 
-	if(_is_no_leaf(parent) && _has_exactly_one_child(parent))
+	if(!_is_leaf(parent) && _has_exactly_one_child(parent))
 	{
-		_merge_entry(parent, parent->Children);
+		_entry_merge(parent, parent->Children);
 	}
 }
 
-static void _symtab_destroy(SymTab *tab)
+static void _symtab_destroy(SymEntry *tab)
 {
 	if(!tab)
 	{
@@ -178,20 +172,20 @@ static void _symtab_destroy(SymTab *tab)
 
 	_symtab_destroy(tab->Next);
 	_symtab_destroy(tab->Children);
-	_free_entry(tab);
+	_entry_free(tab);
 }
 
 /* --- PUBLIC --- */
-SymTab *symtab_create(int capacity)
+SymEntry *symtab_create(int capacity)
 {
-	SymEntry *tab = _new_entry();
+	SymEntry *tab = _entry_new();
 	tab->Piece = "";
 	tab->Value = 42;
 	return tab;
 	(void)capacity;
 }
 
-void symtab_destroy(SymTab *tab)
+void symtab_destroy(SymEntry *tab)
 {
 	_symtab_destroy(tab->Children);
 	free(tab);
@@ -220,7 +214,7 @@ int symtab_put(SymEntry *entry, const char *ident, int value)
 				_set_leaf_value(entry, value);
 				entry = NULL;
 			}
-			else if(_has_no_children(entry))
+			else if(!_has_children(entry))
 			{
 				_new_single_leaf(entry, search, value);
 				entry = NULL;
@@ -264,8 +258,8 @@ int symtab_put(SymEntry *entry, const char *ident, int value)
 int symtab_remove(SymEntry *entry, const char *ident)
 {
 	int val = 0;
-	SymTab *parent = NULL;
-	SymTab *prev = NULL;
+	SymEntry *parent = NULL;
+	SymEntry *prev = NULL;
 	while(entry)
 	{
 		const char *search = ident;
@@ -281,7 +275,7 @@ int symtab_remove(SymEntry *entry, const char *ident)
 			if(!*search && _is_leaf(entry))
 			{
 				val = _get_value(entry);
-				_remove_entry(entry, parent, prev);
+				_entry_remove(entry, parent, prev);
 				entry = NULL;
 			}
 			else
@@ -337,7 +331,7 @@ int symtab_get(const SymEntry *entry, const char *ident)
 	return val;
 }
 
-int symtab_complete(const SymTab *entry, char *ident)
+int symtab_complete(const SymEntry *entry, char *ident)
 {
 	int modified = 0;
 	while(entry)
@@ -383,7 +377,7 @@ int symtab_complete(const SymTab *entry, char *ident)
 	return modified;
 }
 
-int symtab_prefix_iter(const SymTab *entry, char *ident, int max_results,
+int symtab_prefix_iter(const SymEntry *entry, char *ident, int max_results,
 	void *data, void (*callback)(void *data, char *ident))
 {
 	int num_results = 0;
@@ -425,7 +419,7 @@ static void _symtab_print(const SymEntry *entry, int nesting)
 	}
 }
 
-void symtab_print(const SymTab *tab)
+void symtab_print(const SymEntry *tab)
 {
 	_symtab_print(tab->Children, 0);
 }

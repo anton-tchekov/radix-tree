@@ -45,13 +45,6 @@ static char *_strdup(const char *s)
 	return p;
 }
 
-static void _append(char *dst, const char *src)
-{
-	size_t dst_len = strlen(dst);
-	dst = realloc(dst, dst_len + strlen(src) + 1);
-	strcpy(dst + dst_len, src);
-}
-
 static inline int _is_leaf(const SymEntry *entry)
 {
 	return entry->Value;
@@ -141,22 +134,20 @@ static void _entry_split_for_prefix(SymEntry *entry, char *pos, int value)
 
 static void _merge_entry(SymEntry *parent, SymEntry *child)
 {
+	size_t parent_len = strlen(parent->Piece);
+	size_t child_len = strlen(child->Piece);
 	parent->Value = child->Value;
 	parent->Children = child->Children;
-	_append(parent->Piece, child->Piece);
+	parent->Piece = realloc(parent->Piece, parent_len + child_len + 1);
+	strcpy(parent->Piece + parent_len, child->Piece);
 	_free_entry(child);
 }
 
 static void _remove_entry(SymEntry *entry, SymEntry *parent, SymEntry *prev)
 {
-	/* TODO: Fix Bugs */
 	if(_has_children(entry))
 	{
 		entry->Value = 0;
-		if(_is_last(entry->Children))
-		{
-
-		}
 	}
 	else
 	{
@@ -172,7 +163,7 @@ static void _remove_entry(SymEntry *entry, SymEntry *parent, SymEntry *prev)
 		_free_entry(entry);
 	}
 
-	if(_has_exactly_one_child(parent) && _is_no_leaf(parent))
+	if(_is_no_leaf(parent) && _has_exactly_one_child(parent))
 	{
 		_merge_entry(parent, parent->Children);
 	}
@@ -195,7 +186,7 @@ SymTab *symtab_create(int capacity)
 {
 	SymEntry *tab = _new_entry();
 	tab->Piece = "";
-	tab->Value = 0;
+	tab->Value = 42;
 	return tab;
 	(void)capacity;
 }

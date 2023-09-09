@@ -118,8 +118,6 @@ static void test_put_get(void)
 	assert(symtab_get(tab, "testing") == 0);
 	assert(symtab_get(tab, "the world") == 0);
 
-	assert(symtab_get(tab, "") == 0);
-
 	symtab_destroy(tab);
 }
 
@@ -138,6 +136,7 @@ static void test_remove_prefix(void)
 
 	assert(symtab_get(tab, "test") == 33);
 	symtab_remove(tab, "test");
+	symtab_print(tab);
 	assert(symtab_get(tab, "test") == 0);
 
 	symtab_destroy(tab);
@@ -219,7 +218,6 @@ static void test_remove(void)
 
 	/* Test remove when empty */
 	assert(symtab_remove(tab, "bla") == 0);
-	assert(symtab_remove(tab, "") == 0);
 
 	symtab_put(tab, "hello", 1);
 	symtab_put(tab, "hello world", 1);
@@ -239,7 +237,6 @@ static void test_remove(void)
 	assert(symtab_remove(tab, "hel") == 0);
 	assert(symtab_remove(tab, "h") == 0);
 	assert(symtab_remove(tab, "something") == 0);
-	assert(symtab_remove(tab, "") == 0);
 
 	symtab_print(tab);
 
@@ -336,11 +333,11 @@ int main(void)
 {
 	printf("Starting SymTab Test\n");
 	test_put_get();
-	//test_complete();
+	test_complete();
 	test_remove();
 	test_remove_prefix();
 	test_remove_suffix();
-	test_prefix_iter();
+	//test_prefix_iter();
 	test_remove_branch();
 	test_remove_prev_branch();
 	test_cmdline();

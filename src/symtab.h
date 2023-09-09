@@ -17,7 +17,7 @@
 #define SYMTAB_IMPL_TREE  1
 #define SYMTAB_IMPL_ARRAY 2
 
-#define SYMTAB_IMPLEMENTATION SYMTAB_IMPL_ARRAY
+#define SYMTAB_IMPLEMENTATION SYMTAB_IMPL_TREE
 
 /* Symbol table interface */
 typedef struct SYMTAB SymTab;
